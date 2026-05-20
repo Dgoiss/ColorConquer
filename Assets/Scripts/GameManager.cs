@@ -1,4 +1,5 @@
 //Controla a máquina de estados do jogo (Turno do Jogador, Turno da IA, Verificação de Vitória).
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour {
@@ -112,23 +113,45 @@ public class GameManager : MonoBehaviour {
             return;
         }
 
-        Territory origin = aiTerritories[Random.Range(0, aiTerritories.Length)];
-        Territory[] playerNeighbors = origin.neighbors != null
-            ? System.Array.FindAll(origin.neighbors, t => t != null && t.owner == "Player")
-            : new Territory[0];
+        List<Territory> neutralTargets = new List<Territory>();
+        List<Territory> playerTargets = new List<Territory>();
+        List<Territory> originForNeutral = new List<Territory>();
+        List<Territory> originForPlayer = new List<Territory>();
 
+        foreach (Territory aiOrigin in aiTerritories) {
+            if (aiOrigin == null || aiOrigin.neighbors == null) continue;
+            foreach (Territory neighbor in aiOrigin.neighbors) {
+                if (neighbor == null) continue;
+                if (neighbor.owner == "Neutral") {
+                    originForNeutral.Add(aiOrigin);
+                    neutralTargets.Add(neighbor);
+                } else if (neighbor.owner == "Player") {
+                    originForPlayer.Add(aiOrigin);
+                    playerTargets.Add(neighbor);
+                }
+            }
+        }
+
+        Territory origin = null;
         Territory destination = null;
 
-        if (playerNeighbors.Length > 0) {
-            destination = playerNeighbors[Random.Range(0, playerNeighbors.Length)];
+        if (neutralTargets.Count > 0) {
+            int choice = Random.Range(0, neutralTargets.Count);
+            origin = originForNeutral[choice];
+            destination = neutralTargets[choice];
+        } else if (playerTargets.Count > 0) {
+            int choice = Random.Range(0, playerTargets.Count);
+            origin = originForPlayer[choice];
+            destination = playerTargets[choice];
         } else {
             Territory[] playerTerritories = System.Array.FindAll(allTerritories, t => t.owner == "Player");
             if (playerTerritories.Length > 0) {
+                origin = aiTerritories[Random.Range(0, aiTerritories.Length)];
                 destination = playerTerritories[Random.Range(0, playerTerritories.Length)];
             }
         }
 
-        if (destination == null) {
+        if (origin == null || destination == null || origin.Equals(null) || destination.Equals(null)) {
             Debug.Log("IA não encontrou um alvo válido para atacar.");
             if (UIManager.instance != null) {
                 UIManager.instance.UpdateStatus("IA não encontrou alvo válido. Turno retorna para o jogador.");
@@ -150,6 +173,11 @@ public class GameManager : MonoBehaviour {
     }
 
     public void Battle(Territory attacker, Territory defender) {
+        if (attacker == null || defender == null || attacker.Equals(null) || defender.Equals(null)) {
+            Debug.LogWarning("Battle aborted: attacker or defender inválido.");
+            return;
+        }
+
         int result = (attacker.troops - defender.troops) + Random.Range(1, 6);
 
         attacker.RemoveTroops(1);
