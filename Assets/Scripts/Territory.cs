@@ -23,9 +23,32 @@ public class Territory : MonoBehaviour {
     void OnMouseDown() {
         if (GameManager.instance != null) {
             Debug.Log("Clicou em: " + gameObject.name);
+            // Som de confirmação apenas quando for o turno do jogador e o território for do jogador
+            if (GameManager.instance.currentTurn == "Player" && owner == "Player") {
+                if (AudioManager.instance != null) {
+                    AudioManager.instance.PlayConfirm();
+                }
+            }
+
             GameManager.instance.SelectTerritory(this);
         } else {
             Debug.LogError("GameManager não encontrado na cena!");
+        }
+    }
+
+    void OnMouseEnter() {
+        if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
+            if (owner != "Player") {
+                UIManager.instance.UpdateSelectionInfo(GameManager.instance.GetSelectedOrigin(), this);
+            }
+        }
+    }
+
+    void OnMouseExit() {
+        if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
+            if (owner != "Player") {
+                UIManager.instance.UpdateSelectionInfo(GameManager.instance.GetSelectedOrigin(), null);
+            }
         }
     }
 
@@ -35,20 +58,17 @@ public class Territory : MonoBehaviour {
         UpdateTroopsText();
     }
 
-    public void AddTroops(int amount)
-    {
+    public void AddTroops(int amount) {
         troops += amount;
         UpdateTroopsText();
     }
 
-    public void RemoveTroops(int amount)
-    {
+    public void RemoveTroops(int amount) {
         troops = Mathf.Max(0, troops - amount);
         UpdateTroopsText();
     }
 
-    private void UpdateTroopsText()
-    {
+    private void UpdateTroopsText() {
         if (troopsText != null) {
             troopsText.text = troops.ToString();
         }
