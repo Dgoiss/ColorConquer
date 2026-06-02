@@ -37,18 +37,16 @@ public class Territory : MonoBehaviour {
     }
 
     void OnMouseEnter() {
+        // Não importa quem é o dono, ao passar o mouse, exibe as informações no painel único
         if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
-            if (owner != "Player") {
-                UIManager.instance.UpdateSelectionInfo(GameManager.instance.GetSelectedOrigin(), this);
-            }
+            UIManager.instance.UpdateHoverInfo(this);
         }
     }
 
     void OnMouseExit() {
+        // Ao retirar o mouse, limpa o painel único voltando para o estado padrão
         if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
-            if (owner != "Player") {
-                UIManager.instance.UpdateSelectionInfo(GameManager.instance.GetSelectedOrigin(), null);
-            }
+            UIManager.instance.UpdateHoverInfo(null);
         }
     }
 

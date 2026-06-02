@@ -52,10 +52,26 @@ public class GameManager : MonoBehaviour {
 
     private Territory selectedOrigin;
 
+    private System.Collections.IEnumerator BeginAITurn()
+    {
+        yield return new WaitForSeconds(1.5f);
+        AIPlay();
+    }
+
+    private System.Collections.IEnumerator FinishAITurn()
+    {
+        yield return new WaitForSeconds(1.5f);
+        EndTurn();
+    }
+
     public void SelectTerritory(Territory t) {
         if (currentTurn != "Player") {
             Debug.Log("Não é turno do jogador.");
             return;
+        }
+
+        if (UIManager.instance != null) {
+            UIManager.instance.UpdateDiceDisplay(null, null); // Limpa os dados anteriores
         }
 
         if (selectedOrigin == null) {
@@ -123,9 +139,14 @@ public class GameManager : MonoBehaviour {
                     UIManager.instance.UpdateSelectionInfo(selectedOrigin, t);
                     UIManager.instance.UpdateStatus($"Atacando {t.name}...\n{selectedOrigin.name} ({selectedOrigin.troops}) vs {t.name} ({t.troops})");
                 }
+                
+                // Executa a batalha corrigida
                 Battle(selectedOrigin, t);
+
+                // combate concluído, agora o turno termina
+                EndTurn();
             }
-            
+
             selectedOrigin = null;
         }
     }
@@ -189,29 +210,34 @@ public class GameManager : MonoBehaviour {
         Debug.Log($"Fase de Alocação: Fação {faction} recebeu +1 tropa em {countGenerated} territórios.");
     }
 
-    public void EndTurn() {
+    public void EndTurn()
+    {
         currentTurn = (currentTurn == "Player") ? "AI" : "Player";
-        Debug.Log("Turno atual: " + currentTurn);
-        
-        // Distribui o ganho de tropas passivo para a facção que está iniciando o turno
+
+        Debug.Log($"Turno atual: {currentTurn}");
+
         DistributeTurnTroops(currentTurn);
 
-        if (UIManager.instance != null) {
+        if (UIManager.instance != null)
             UIManager.instance.UpdateTurn(currentTurn);
-        }
-        
-        if (currentTurn == "Player") {
-            if (AudioManager.instance != null) {
-                AudioManager.instance.PlayNotification();
-            }
-        }
 
-        if (currentTurn == "AI") {
-            if (UIManager.instance != null) {
-                UIManager.instance.UpdateStatus("IA está jogando...");
+        if (currentTurn == "AI")
+        {
+            if (UIManager.instance != null)
+            {
+                UIManager.instance.UpdateStatus("IA está pensando...");
                 UIManager.instance.UpdateSelectionInfo(null, null);
             }
-            AIPlay();
+
+            StartCoroutine(BeginAITurn());
+        }
+        else
+        {
+            if (AudioManager.instance != null)
+                AudioManager.instance.PlayNotification();
+
+            if (UIManager.instance != null)
+                UIManager.instance.UpdateStatus("Seu turno.");
         }
     }
 
@@ -225,11 +251,17 @@ public class GameManager : MonoBehaviour {
             if (t.troops > 1) validOrigins.Add(t);
         }
 
-        if (validOrigins.Count == 0) {
+        if (validOrigins.Count == 0)
+        {
             Debug.Log("IA não possui tropas suficientes para atacar.");
-            currentTurn = "Player";
-            DistributeTurnTroops(currentTurn);
-            UIManager.instance.UpdateTurn(currentTurn);
+
+            if (UIManager.instance != null)
+            {
+                UIManager.instance.UpdateStatus("IA não possui tropas suficientes.");
+                UIManager.instance.UpdateBattleResult("IA passou o turno.");
+            }
+
+            StartCoroutine(FinishAITurn());
             return;
         }
 
@@ -277,109 +309,168 @@ public class GameManager : MonoBehaviour {
 
         Debug.Log($"IA ataca de {origin.name} para {destination.name}");
         if (UIManager.instance != null) {
-            if (!origin.Equals(null) && !destination.Equals(null)) {
+            if (origin != null && destination != null) {
                 UIManager.instance.UpdateSelectionInfo(origin, destination);
                 UIManager.instance.UpdateStatus($"IA atacando {destination.name}...\n{origin.name} ({origin.troops}) vs {destination.name} ({destination.troops})");
             }
         }
         
         Battle(origin, destination);
-        EndTurn();
+        StartCoroutine(FinishAITurn());
     }
 
-    // JOGO DE TABULEIRO / TÁTICO: Sistema de Combate Realista por Dados Comparados
-    public void Battle(Territory attacker, Territory defender) {
-        if (attacker == null || defender == null || attacker.Equals(null) || defender.Equals(null)) {
-            Debug.LogWarning("Batalha abortada: referências inválidas.");
+    public void Battle(Territory attacker, Territory defender)
+    {
+        if (attacker == null || defender == null)
             return;
-        }
 
-        // Atacante usa até 3 dados (deixando sempre pelo menos 1 tropa protegendo a origem)
+        int attackerTroopsBeforeBattle = attacker.troops;
+
         int attackerDiceCount = Mathf.Clamp(attacker.troops - 1, 1, 3);
-        // Defensor usa até 2 dados baseado no seu contingente de defesa
         int defenderDiceCount = Mathf.Clamp(defender.troops, 1, 2);
 
         List<int> attackerResults = new List<int>();
         List<int> defenderResults = new List<int>();
 
-        // Rolagem dos dados simulados
-        for (int i = 0; i < attackerDiceCount; i++) attackerResults.Add(Random.Range(1, 7));
-        for (int i = 0; i < defenderDiceCount; i++) defenderResults.Add(Random.Range(1, 7));
+        for (int i = 0; i < attackerDiceCount; i++)
+            attackerResults.Add(Random.Range(1, 7));
 
-        // Ordena do maior para o menor (Regra clássica de jogos de tabuleiro táticos)
+        for (int i = 0; i < defenderDiceCount; i++)
+            defenderResults.Add(Random.Range(1, 7));
+
         attackerResults.Sort((a, b) => b.CompareTo(a));
         defenderResults.Sort((a, b) => b.CompareTo(a));
 
+        if (UIManager.instance != null)
+            UIManager.instance.UpdateDiceDisplay(attackerResults, defenderResults);
+
         int comparisons = Mathf.Min(attackerResults.Count, defenderResults.Count);
+
         int attackerLosses = 0;
         int defenderLosses = 0;
 
-        // Compara os maiores dados um a um
-        for (int i = 0; i < comparisons; i++) {
-            if (attackerResults[i] > defenderResults[i]) {
+        for (int i = 0; i < comparisons; i++)
+        {
+            if (attackerResults[i] > defenderResults[i])
                 defenderLosses++;
-            } else {
-                // Em caso de empate ou dado menor, o defensor vence a disputa do dado
+            else
                 attackerLosses++;
-            }
         }
 
-        // Aplica as baixas calculadas no confronto
+        Debug.Log("===== RESULTADO DOS DADOS =====");
+        Debug.Log($"Atacante: [{string.Join(", ", attackerResults)}]");
+        Debug.Log($"Defensor: [{string.Join(", ", defenderResults)}]");
+
+        Debug.Log("===== ANTES DAS BAIXAS =====");
+        Debug.Log($"Território atacante: {attacker.name}");
+        Debug.Log($"Tropas atacante: {attacker.troops}");
+
+        Debug.Log($"Território defensor: {defender.name}");
+        Debug.Log($"Tropas defensor: {defender.troops}");
+
+        Debug.Log("===== PERDAS CALCULADAS =====");
+        Debug.Log($"Perdas atacante: {attackerLosses}");
+        Debug.Log($"Perdas defensor: {defenderLosses}");
+
         attacker.RemoveTroops(attackerLosses);
         defender.RemoveTroops(defenderLosses);
 
-        string battleMessage;
-        bool playerWonBattle = false;
+        Debug.Log("===== APÓS AS BAIXAS =====");
+        Debug.Log($"Atacante restante: {attacker.troops}");
+        Debug.Log($"Defensor restante: {defender.troops}");
 
-        // CAPTURA: Se a defesa foi completamente aniquilada, o território é conquistado
-        if (defender.troops <= 0) {
-            playerWonBattle = true;
+        bool conquered = defender.troops <= 0;
+
+        Debug.Log("===== VERIFICAÇÃO DE CONQUISTA =====");
+        Debug.Log($"Defensor ficou com {defender.troops} tropas");
+        Debug.Log($"Conquistado? {conquered}");
+
+        string battleMessage;
+
+        if (conquered)
+        {
             string newOwner = attacker.owner;
-            Color newColor = (newOwner == "Player") ? Color.red : Color.blue;
-            
+
+            Color newColor =
+                (newOwner == "Player")
+                ? Color.red
+                : Color.blue;
+
             defender.ChangeOwner(newOwner, newColor);
 
-            // Transfere as tropas vitoriosas restantes da batalha para ocupar o espaço capturado
-            int troopsToOccupy = Mathf.Max(1, attacker.troops - 1);
+            int troopsToOccupy = attacker.troops - 1;
+
+            Debug.Log("===== OCUPAÇÃO =====");
+            Debug.Log($"Tropas no atacante após batalha: {attacker.troops}");
+            Debug.Log($"Tropas enviadas para ocupação: {troopsToOccupy}");
+
             attacker.RemoveTroops(troopsToOccupy);
-            defender.AddTroops(troopsToOccupy);
 
-            if (newOwner == "Player") {
-                battleMessage = $"Sucesso Tático! Você capturou {defender.name}!\nTropas de ocupação: {defender.troops}";
-            } else {
-                battleMessage = $"Atenção! A IA capturou o seu território {defender.name}!";
+            defender.troops = troopsToOccupy;
+            defender.AddTroops(0);
+
+            Debug.Log("===== ESTADO FINAL =====");
+            Debug.Log($"{attacker.name} ficou com {attacker.troops} tropas");
+            Debug.Log($"{defender.name} ficou com {defender.troops} tropas");
+            Debug.Log($"Dono atual de {defender.name}: {defender.owner}");
+
+            if (newOwner == "Player")
+            {
+                battleMessage =
+                    $"Vitória! {defender.name} foi conquistado!\n" +
+                    $"Tropas enviadas: {troopsToOccupy}";
             }
-        } else {
-            // O território resistiu ao ataque tático
-            if (attacker.owner == "Player") {
-                battleMessage = $"O ataque falhou. Suas baixas: {attackerLosses}. Defesa restante em {defender.name}: {defender.troops}";
-            } else {
-                battleMessage = $"Seu território {defender.name} defendeu o ataque da IA com sucesso!";
+            else
+            {
+                battleMessage =
+                    $"A IA conquistou {defender.name}!";
+            }
+            Debug.Log("===== TERRITÓRIO CONQUISTADO =====");
+            Debug.Log($"Novo dono: {attacker.owner}");
+            Debug.Log($"Território conquistado: {defender.name}");
+        }
+        else
+        {
+            if (attacker.owner == "Player")
+            {
+                battleMessage =
+                    $"Ataque encerrado.\n" +
+                    $"Perdas do atacante: {attackerLosses}\n" +
+                    $"Perdas do defensor: {defenderLosses}";
+            }
+            else
+            {
+                battleMessage =
+                    $"{defender.name} resistiu ao ataque da IA.";
             }
         }
 
-        // Controle dos efeitos sonoros baseados na participação direta do jogador humano
-        if (attacker.owner == "Player") {
-            if (AudioManager.instance != null) {
-                if (defender.owner == "Player" && playerWonBattle) AudioManager.instance.PlayKeepVictory();
-                else AudioManager.instance.PlayDefeat();
-            }
-        } else if (defender.owner == "Player" && defender.troops <= 0) {
-            // Caso o jogador tenha sido atacado e perdido o território dele para a IA
-            if (AudioManager.instance != null) AudioManager.instance.PlayDefeat();
-        }
-
-        if (UIManager.instance != null) {
+        if (UIManager.instance != null)
+        {
             UIManager.instance.UpdateBattleResult(battleMessage);
-            UIManager.instance.UpdateSelectionInfo(null, null);
         }
 
-        if (currentTurn == "Player") {
-            EndTurn();
+        if (AudioManager.instance != null)
+        {
+            if (attacker.owner == "Player")
+            {
+                if (conquered)
+                    AudioManager.instance.PlayVictory();
+                else
+                    AudioManager.instance.PlayDefeat();
+            }
+            else if (conquered && defender.owner == "AI")
+            {
+                AudioManager.instance.PlayDefeat();
+            }
         }
+
+        Debug.Log(
+            $"Batalha: {attacker.name} -> {defender.name} | " +
+            $"AtkLoss={attackerLosses} DefLoss={defenderLosses}"
+        );
     }
 }
-
 // Extensão estendida apenas para compatibilidade de nomenclatura interna do áudio
 public static class AudioFallbackExtension {
     public static void PlayKeepVictory(this AudioManager am) {
