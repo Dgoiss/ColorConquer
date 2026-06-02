@@ -60,11 +60,31 @@ public class UIManager : MonoBehaviour {
             return;
         }
 
-        // Define uma cor em formato rich-text dependendo de quem é o dono (Categoria: Colour do sorteio)
+        // Define uma cor em formato rich-text dependendo de quem é o dono
         string donoColorido = t.owner;
-        if (t.owner == "Player") donoColorido = "<color=red>Seu Exército</color>";
-        else if (t.owner == "AI") donoColorido = "<color=blue>Inimigo (IA)</color>";
-        else donoColorido = "<color=white>Neutro</color>";
+        if (t.owner == "Player") {
+            // Pega o nome da cor em português escolhida no menu (Padrão: vermelho)
+            string corNomePt = (GameData.instance != null) ? GameData.instance.playerColorName : "Vermelho";
+            
+            // Converte o nome em português para a tag correspondente em inglês que o TextMeshPro entende
+            string corHtml = "red"; // Fallback padrão
+            switch (corNomePt.ToLower()) {
+                case "verde": corHtml = "green"; break;
+                case "amarelo": corHtml = "yellow"; break;
+                case "laranja": corHtml = "orange"; break;
+                case "roxo": corHtml = "purple"; break;
+                case "vermelho": corHtml = "red"; break;
+            }
+
+            // Aplica a cor dinâmica no Rich Text
+            donoColorido = $"<color={corHtml}>Seu Exército ({corNomePt})</color>";
+        } 
+        else if (t.owner == "AI") {
+            donoColorido = "<color=blue>Inimigo (IA)</color>";
+        } 
+        else {
+            donoColorido = "<color=white>Neutro</color>";
+        }
 
         // Exibe todas as informações consolidadas no mesmo componente TextMeshPro
         hoverInfoText.text = $"<b>Região:</b> {t.name}\n" +
@@ -74,7 +94,8 @@ public class UIManager : MonoBehaviour {
 
     public void UpdatePlayerColor() {
         if (playerColorText != null) {
-            playerColorText.text = "Sua cor: Vermelho";
+            string corNome = (GameData.instance != null) ? GameData.instance.playerColorName : "Vermelho";
+            playerColorText.text = "Sua cor: " + corNome;
         }
     }
 

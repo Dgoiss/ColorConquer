@@ -81,7 +81,7 @@ public class Territory : MonoBehaviour {
         }
 
         if (owner == "Player") {
-            sr.color = playerColor;
+            sr.color = (GameData.instance != null) ? GameData.instance.playerColor : Color.red;
         } else if (owner == "AI") {
             sr.color = aiColor;
         } else {

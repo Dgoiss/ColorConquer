@@ -28,11 +28,14 @@ public class GameManager : MonoBehaviour {
         Territory[] allTerritories = FindObjectsOfType<Territory>();
         if (allTerritories.Length == 0) return;
 
+        // Pega a cor dinâmica salva no menu, ou usa vermelho se o jogo começar direto pela cena principal
+        Color chosenColor = (GameData.instance != null) ? GameData.instance.playerColor : Color.red;
+
         bool hasPlayer = System.Array.Exists(allTerritories, t => t.owner == "Player");
         bool hasAI = System.Array.Exists(allTerritories, t => t.owner == "AI");
 
         if (!hasPlayer && !hasAI) {
-            allTerritories[0].ChangeOwner("Player", Color.red);
+            allTerritories[0].ChangeOwner("Player", chosenColor); // 🔥 Cor corrigida aqui
             if (allTerritories.Length > 1) {
                 allTerritories[1].ChangeOwner("AI", Color.blue);
             }
@@ -41,7 +44,7 @@ public class GameManager : MonoBehaviour {
 
         if (!hasPlayer) {
             Territory neutral = System.Array.Find(allTerritories, t => t.owner == "Neutral");
-            if (neutral != null) neutral.ChangeOwner("Player", Color.red);
+            if (neutral != null) neutral.ChangeOwner("Player", chosenColor); // 🔥 Cor corrigida aqui
         }
 
         if (!hasAI) {
@@ -357,33 +360,10 @@ public class GameManager : MonoBehaviour {
                 attackerLosses++;
         }
 
-        Debug.Log("===== RESULTADO DOS DADOS =====");
-        Debug.Log($"Atacante: [{string.Join(", ", attackerResults)}]");
-        Debug.Log($"Defensor: [{string.Join(", ", defenderResults)}]");
-
-        Debug.Log("===== ANTES DAS BAIXAS =====");
-        Debug.Log($"Território atacante: {attacker.name}");
-        Debug.Log($"Tropas atacante: {attacker.troops}");
-
-        Debug.Log($"Território defensor: {defender.name}");
-        Debug.Log($"Tropas defensor: {defender.troops}");
-
-        Debug.Log("===== PERDAS CALCULADAS =====");
-        Debug.Log($"Perdas atacante: {attackerLosses}");
-        Debug.Log($"Perdas defensor: {defenderLosses}");
-
         attacker.RemoveTroops(attackerLosses);
         defender.RemoveTroops(defenderLosses);
 
-        Debug.Log("===== APÓS AS BAIXAS =====");
-        Debug.Log($"Atacante restante: {attacker.troops}");
-        Debug.Log($"Defensor restante: {defender.troops}");
-
         bool conquered = defender.troops <= 0;
-
-        Debug.Log("===== VERIFICAÇÃO DE CONQUISTA =====");
-        Debug.Log($"Defensor ficou com {defender.troops} tropas");
-        Debug.Log($"Conquistado? {conquered}");
 
         string battleMessage;
 
@@ -391,28 +371,21 @@ public class GameManager : MonoBehaviour {
         {
             string newOwner = attacker.owner;
 
+            Color playerColor = (GameData.instance != null) ? GameData.instance.playerColor : Color.red;
+
             Color newColor =
                 (newOwner == "Player")
-                ? Color.red
+                ? playerColor // Usa a cor dinâmica ao invés de Color.red fixo!
                 : Color.blue;
 
             defender.ChangeOwner(newOwner, newColor);
 
             int troopsToOccupy = attacker.troops - 1;
 
-            Debug.Log("===== OCUPAÇÃO =====");
-            Debug.Log($"Tropas no atacante após batalha: {attacker.troops}");
-            Debug.Log($"Tropas enviadas para ocupação: {troopsToOccupy}");
-
             attacker.RemoveTroops(troopsToOccupy);
 
             defender.troops = troopsToOccupy;
             defender.AddTroops(0);
-
-            Debug.Log("===== ESTADO FINAL =====");
-            Debug.Log($"{attacker.name} ficou com {attacker.troops} tropas");
-            Debug.Log($"{defender.name} ficou com {defender.troops} tropas");
-            Debug.Log($"Dono atual de {defender.name}: {defender.owner}");
 
             if (newOwner == "Player")
             {
@@ -425,9 +398,6 @@ public class GameManager : MonoBehaviour {
                 battleMessage =
                     $"A IA conquistou {defender.name}!";
             }
-            Debug.Log("===== TERRITÓRIO CONQUISTADO =====");
-            Debug.Log($"Novo dono: {attacker.owner}");
-            Debug.Log($"Território conquistado: {defender.name}");
         }
         else
         {

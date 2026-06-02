@@ -449,7 +449,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.04745, y: 0.78185}
+  m_AnchoredPosition: {x: 0.04745, y: 3.2162}
   m_SizeDelta: {x: 11.103, y: 1.5637}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &48847764
@@ -2238,7 +2238,7 @@ MonoBehaviour:
   backgroundMusic: {fileID: 8300000, guid: 52a9d84e42afc7b498f5b4732aa9dbd7, type: 3}
   Som_Confirmacao: {fileID: 8300000, guid: b4515dc73ded68f4991ad0902c57e104, type: 3}
   Som_Erro: {fileID: 8300000, guid: c4cf977ab9b734040a5251f9ff67617b, type: 3}
-  Som_Combate_Vitoria: {fileID: 8300000, guid: b4515dc73ded68f4991ad0902c57e104, type: 3}
+  Som_Combate_Vitoria: {fileID: 8300000, guid: 2ef4945c7bf51c9409d4408054871b40, type: 3}
   Som_Combate_Derrota: {fileID: 8300000, guid: 0682dec9dadcc9d4e9f01a9256bf442a, type: 3}
   Som_Notificacao: {fileID: 8300000, guid: ec0160b7bcf666140bb72547f2ba68f2, type: 3}
   clickTerritorySound: {fileID: 8300000, guid: b4515dc73ded68f4991ad0902c57e104, type: 3}
@@ -2743,8 +2743,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 0.3
-  m_fontSizeBase: 0.3
+  m_fontSize: 0.27
+  m_fontSizeBase: 0.27
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2812,7 +2812,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.04745, y: 2.5282}
+  m_AnchoredPosition: {x: 0.04745, y: -2.2161}
   m_SizeDelta: {x: 11.103, y: 1.5637}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &419218627
@@ -4193,7 +4193,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &566967998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4521,9 +4521,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 085670269bcb35b4cac2a72c3d834030, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  turnText: {fileID: 861593317}
+  turnText: {fileID: 0}
   statusText: {fileID: 1442149831}
-  playerColorText: {fileID: 566967998}
+  playerColorText: {fileID: 0}
   battleResultText: {fileID: 402174338}
   diceResultText: {fileID: 1837484368}
   hoverInfoText: {fileID: 38396880}
@@ -5691,7 +5691,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &861593317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5712,7 +5712,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Status
+  m_text: Turno
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -7075,8 +7075,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 0.3
-  m_fontSizeBase: 0.3
+  m_fontSize: 0.27
+  m_fontSizeBase: 0.27
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7144,7 +7144,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.04745, y: 3.2162}
+  m_AnchoredPosition: {x: 0.04745, y: -3.2161}
   m_SizeDelta: {x: 11.103, y: 1.5637}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1498293866
@@ -7408,7 +7408,7 @@ Transform:
   m_GameObject: {fileID: 1516358384}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.2, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -8838,8 +8838,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281519410
-  m_fontColor: {r: 0.1960784, g: 0.8039216, b: 0.1960784, a: 1}
+    rgba: 4278207999
+  m_fontColor: {r: 1, g: 0.2705882, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -8925,7 +8925,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.04745, y: -2.2161}
+  m_AnchoredPosition: {x: 0.04745, y: 1.45}
   m_SizeDelta: {x: 11.103, y: 1.5637}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1899658925
