@@ -10,8 +10,9 @@ public class Territory : MonoBehaviour {
     private SpriteRenderer sr;
     public TextMeshPro troopsText;
 
-    private static readonly Color playerColor = Color.red;
-    private static readonly Color aiColor = Color.blue;
+    // 🔥 CORREÇÃO: Inversão das cores estáticas base
+    private static readonly Color playerColor = Color.blue; // Azul agora é a cor base do player (caso GameData falhe)
+    private static readonly Color aiColor = Color.red;
     private static readonly Color neutralColor = Color.gray;
 
     void Start() {

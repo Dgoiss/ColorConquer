@@ -3,9 +3,9 @@ using UnityEngine;
 public class GameData : MonoBehaviour {
     public static GameData instance;
 
-    // Guarda a cor escolhida pelo jogador (Padrão: Vermelho)
+    // Guarda a cor escolhida pelo jogador
     public Color playerColor = Color.red; 
-    public string playerColorName = "Vermelho";
+    public string playerColorName = "Azul";
 
     void Awake() {
         if (instance == null) {

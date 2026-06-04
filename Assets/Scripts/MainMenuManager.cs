@@ -7,28 +7,41 @@ public class MainMenuManager : MonoBehaviour {
     [Header("UI Text")]
     public TextMeshProUGUI selectedColorText;
 
+    [Header("Painéis")]
+    public GameObject painelCores; // Arraste o objeto PainelCores para aqui no Inspector
+
     void Start() {
-        // Inicializa o texto com a cor padrão
         if (GameData.instance != null && selectedColorText != null) {
             selectedColorText.text = "Cor Selecionada: " + GameData.instance.playerColorName;
         }
+        
+        // Garante que o painel comece fechado
+        if(painelCores != null) painelCores.SetActive(false);
     }
 
-    // Método chamado pelos botões de seleção de cor
+    // Função para o botão principal "Selecionar sua Cor"
+    public void AbrirFecharPainel() {
+        if (painelCores != null) {
+            // Inverte o estado atual: se estiver aberto fecha, se estiver fechado abre
+            bool estadoAtual = painelCores.activeSelf;
+            painelCores.SetActive(!estadoAtual);
+        }
+    }
+
     public void SelectColor(string colorName) {
         if (GameData.instance == null) return;
 
         switch (colorName.ToLower()) {
-            case "vermelho":
-                GameData.instance.playerColor = Color.red;
-                GameData.instance.playerColorName = "Vermelho";
+            case "azul":
+                GameData.instance.playerColor = Color.blue;
+                GameData.instance.playerColorName = "Azul";
                 break;
             case "verde":
-                GameData.instance.playerColor = new Color(0f, 0.6f, 0f); // Verde escuro para melhor legibilidade
+                GameData.instance.playerColor = new Color(0f, 0.6f, 0f); // Verde escuro para leitura
                 GameData.instance.playerColorName = "Verde";
                 break;
             case "amarelo":
-                GameData.instance.playerColor = new Color(0.9f, 0.9f, 0f); // Amarelo visível
+                GameData.instance.playerColor = new Color(0.9f, 0.9f, 0f);
                 GameData.instance.playerColorName = "Amarelo";
                 break;
             case "laranja":
@@ -41,13 +54,15 @@ public class MainMenuManager : MonoBehaviour {
             selectedColorText.text = "Cor Selecionada: " + GameData.instance.playerColorName;
         }
 
-        // Opcional: Tocar som de clique se houver um AudioManager
+        // Esconde o painel após a seleção
+        if (painelCores != null) {
+            painelCores.SetActive(false);
+        }
+
         if (AudioManager.instance != null) AudioManager.instance.PlayConfirm();
     }
 
-    // Método chamado pelo botão "Iniciar Jogo"
     public void StartGame() {
-        // Substitua pelo nome exato da sua cena principal do tabuleiro
         SceneManager.LoadScene("MainGameScene"); 
     }
 }

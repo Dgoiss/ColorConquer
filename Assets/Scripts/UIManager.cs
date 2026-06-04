@@ -10,6 +10,10 @@ public class UIManager : MonoBehaviour {
     public TextMeshProUGUI battleResultText;
     public TextMeshProUGUI diceResultText;
 
+    [Header("Painel de Fim de Jogo")]
+    public GameObject painelGameOver;          // Arraste o 'PainelGameOver' aqui
+    public TextMeshProUGUI textoGameOver;
+
     [Header("Painel Unificado de Inspeção")]
     // Este é o único TextMeshPro que você usará para inspecionar passando o mouse
     public TextMeshProUGUI hoverInfoText; 
@@ -51,6 +55,16 @@ public class UIManager : MonoBehaviour {
         }
     }
 
+    public void MostrarTelaGameOver(string mensagem) {
+        if (painelGameOver != null) {
+            painelGameOver.SetActive(true);
+        }
+
+        if (textoGameOver != null) {
+            textoGameOver.text = mensagem;
+        }
+    }
+
     // Método para atualizar o seu texto único de inspeção por mouse (Tactical / Colour)
     public void UpdateHoverInfo(Territory t) {
         if (hoverInfoText == null) return;
@@ -63,8 +77,8 @@ public class UIManager : MonoBehaviour {
         // Define uma cor em formato rich-text dependendo de quem é o dono
         string donoColorido = t.owner;
         if (t.owner == "Player") {
-            // Pega o nome da cor em português escolhida no menu (Padrão: vermelho)
-            string corNomePt = (GameData.instance != null) ? GameData.instance.playerColorName : "Vermelho";
+            // Pega o nome da cor em português escolhida no menu
+            string corNomePt = (GameData.instance != null) ? GameData.instance.playerColorName : "Azul";
             
             // Converte o nome em português para a tag correspondente em inglês que o TextMeshPro entende
             string corHtml = "red"; // Fallback padrão
@@ -73,14 +87,14 @@ public class UIManager : MonoBehaviour {
                 case "amarelo": corHtml = "yellow"; break;
                 case "laranja": corHtml = "orange"; break;
                 case "roxo": corHtml = "purple"; break;
-                case "vermelho": corHtml = "red"; break;
+                case "azul": corHtml = "blue"; break;
             }
 
             // Aplica a cor dinâmica no Rich Text
             donoColorido = $"<color={corHtml}>Seu Exército ({corNomePt})</color>";
         } 
         else if (t.owner == "AI") {
-            donoColorido = "<color=blue>Inimigo (IA)</color>";
+            donoColorido = "<color=red>Inimigo (IA)</color>";
         } 
         else {
             donoColorido = "<color=white>Neutro</color>";
@@ -94,7 +108,7 @@ public class UIManager : MonoBehaviour {
 
     public void UpdatePlayerColor() {
         if (playerColorText != null) {
-            string corNome = (GameData.instance != null) ? GameData.instance.playerColorName : "Vermelho";
+            string corNome = (GameData.instance != null) ? GameData.instance.playerColorName : "Azul";
             playerColorText.text = "Sua cor: " + corNome;
         }
     }

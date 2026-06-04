@@ -6,6 +6,11 @@ public class GameManager : MonoBehaviour {
     public static GameManager instance;
     public string currentTurn = "Player";
 
+    private Territory territorioInicialPlayer;
+    private Territory territorioInicialAI;
+    private bool jogoAcabou = false; // Bloqueia ações caso o jogo termine
+    private bool escolheuTerritorioInicial = false;
+
     [Header("Configurações de Tabuleiro")]
     [Tooltip("Quantidade máxima de tropas permitida em um único território para evitar objetos imortais.")]
     public int maxTroopsPerTerritory = 15;
@@ -25,32 +30,12 @@ public class GameManager : MonoBehaviour {
     }
 
     private void SetupInitialOwners() {
-        Territory[] allTerritories = FindObjectsOfType<Territory>();
-        if (allTerritories.Length == 0) return;
-
-        // Pega a cor dinâmica salva no menu, ou usa vermelho se o jogo começar direto pela cena principal
-        Color chosenColor = (GameData.instance != null) ? GameData.instance.playerColor : Color.red;
-
-        bool hasPlayer = System.Array.Exists(allTerritories, t => t.owner == "Player");
-        bool hasAI = System.Array.Exists(allTerritories, t => t.owner == "AI");
-
-        if (!hasPlayer && !hasAI) {
-            allTerritories[0].ChangeOwner("Player", chosenColor); // 🔥 Cor corrigida aqui
-            if (allTerritories.Length > 1) {
-                allTerritories[1].ChangeOwner("AI", Color.blue);
-            }
-            return;
+        // Apenas garante que a interface saiba que o jogador precisa escolher
+        if (UIManager.instance != null) {
+            UIManager.instance.UpdateStatus("Escolha seu território inicial clicando em um país!");
+            UIManager.instance.UpdateBattleResult("Fase de Seleção");
         }
-
-        if (!hasPlayer) {
-            Territory neutral = System.Array.Find(allTerritories, t => t.owner == "Neutral");
-            if (neutral != null) neutral.ChangeOwner("Player", chosenColor); // 🔥 Cor corrigida aqui
-        }
-
-        if (!hasAI) {
-            Territory neutral = System.Array.Find(allTerritories, t => t.owner == "Neutral");
-            if (neutral != null) neutral.ChangeOwner("AI", Color.blue);
-        }
+        // Não damos países a ninguém aqui agora!
     }
 
     private Territory selectedOrigin;
@@ -67,7 +52,145 @@ public class GameManager : MonoBehaviour {
         EndTurn();
     }
 
+    [Header("Áudio de Fim de Jogo")]
+    public AudioSource musicaFundoAtual; // Arraste o AudioSource que toca a música do jogo aqui
+    public AudioSource musicaFimDeJogo;  // Arraste um novo AudioSource com a música de Game Over aqui
+
+    private void VerificarCondicaoDeVitoria() {
+        // 1. Se a IA conseguiu dominar o território inicial do Player
+        if (territorioInicialPlayer != null && territorioInicialPlayer.owner == "AI") { //[cite: 14]
+            jogoAcabou = true; //[cite: 14]
+            
+            // 🛑 PARAR TODOS OS SONS E MÚSICAS DO JOGO
+            PararTodosOsSons();
+
+            // 🎵 TOCAR MÚSICA DO FIM DO JOGO
+            if (musicaFimDeJogo != null) {
+                musicaFimDeJogo.Play();
+            } else if (AudioManager.instance != null) {
+                AudioManager.instance.PlayDefeat(); // Fallback de som caso não uses o AudioSource direto //[cite: 14]
+            }
+
+            // 📺 EXIBIR TEXTO NO MEIO DA TELA
+            if (UIManager.instance != null) {
+                string msg = "<color=red>GAME OVER</color>\n\n" +
+                             "A <color=red>IA (Inimigo)</color> dominou a Capital do <color=blue>Jogador</color>!\n\n" +
+                             "<color=red><b>A IA VENCEU A PARTIDA!</b></color>";
+                
+                UIManager.instance.MostrarTelaGameOver(msg);
+                UIManager.instance.UpdateStatus("FIM DE JOGO: A IA capturou sua Capital!"); //[cite: 14]
+                UIManager.instance.UpdateBattleResult("<color=red><b>DERROTA CRÍTICA!</b></color>"); //[cite: 14]
+            }
+            
+            Debug.Log("Jogo Encerrado: Vitória da IA por captura de base."); //[cite: 14]
+        }
+        // 2. Se o Player conseguiu dominar o território inicial da IA
+        else if (territorioInicialAI != null && territorioInicialAI.owner == "Player") { //[cite: 14]
+            jogoAcabou = true; //[cite: 14]
+            
+            // 🛑 PARAR TODOS OS SONS E MÚSICAS DO JOGO
+            PararTodosOsSons();
+
+            // 🎵 TOCAR MÚSICA DO FIM DO JOGO
+            if (musicaFimDeJogo != null) {
+                musicaFimDeJogo.Play();
+            } else if (AudioManager.instance != null) {
+                AudioManager.instance.PlayVictory(); // Fallback de som caso não uses o AudioSource direto //[cite: 14]
+            }
+
+            // 📺 EXIBIR TEXTO NO MEIO DA TELA
+            if (UIManager.instance != null) {
+                string corJogadorHex = (GameData.instance != null) ? GameData.instance.playerColorName : "Jogador";
+                
+                string msg = "<color=green>VITÓRIA!</color>\n\n" +
+                             $"O <color=blue>{corJogadorHex}</color> invadiu e conquistou a Capital da <color=red>IA</color>!\n\n" +
+                             "<color=green><b>PARABÉNS, VOCÊ DOMINOU O IMPÉRIO!</b></color>";
+                
+                UIManager.instance.MostrarTelaGameOver(msg);
+                UIManager.instance.UpdateStatus("PARABÉNS! Você conquistou a Capital inimiga!"); //[cite: 14]
+                UIManager.instance.UpdateBattleResult("<color=green><b>VITÓRIA SUPREMA!</b></color>"); //[cite: 14]
+            }
+            
+            Debug.Log("Jogo Encerrado: Vitória do Player por captura de base."); //[cite: 14]
+        }
+    }
+
+    // Método auxiliar focado em silenciar o ambiente antes da música da vitória/derrota
+    private void PararTodosOsSons() {
+        // 1. Para a música de fundo principal que associaste no Inspector
+        if (musicaFundoAtual != null) {
+            musicaFundoAtual.Stop();
+        }
+
+        // 2. Procura e desliga QUALQUER AudioSource que esteja ativo na cena para garantir silêncio absoluto (efeitos de dados, cliques, etc)
+        AudioSource[] todosOsSons = FindObjectsOfType<AudioSource>();
+        foreach (AudioSource som in todosOsSons) {
+            // Só não para a música do fim de jogo que vai começar agora!
+            if (som != musicaFimDeJogo) {
+                som.Stop();
+            }
+        }
+    }
+
+    private void EscolhaInicialIA() {
+        Territory[] todos = FindObjectsOfType<Territory>();
+        List<Territory> neutros = new List<Territory>();
+
+        foreach (Territory t in todos) {
+            if (t.owner == "Neutral") neutros.Add(t);
+        }
+
+        if (neutros.Count > 0) {
+            int indiceAleatorio = Random.Range(0, neutros.Count);
+            Territory escolhaIA = neutros[indiceAleatorio];
+
+            escolhaIA.ChangeOwner("AI", Color.red);
+            escolhaIA.troops = 3;
+            escolhaIA.AddTroops(0);
+            
+            // 🔥 ADICIONADO: Guarda o território inicial da IA
+            territorioInicialAI = escolhaIA;
+            
+            Debug.Log("A IA escolheu a capital em: " + escolhaIA.name);
+
+            if (AudioManager.instance != null) {
+                AudioManager.instance.PlayNotification(); 
+            }
+        }
+    }
+
     public void SelectTerritory(Territory t) {
+        if (jogoAcabou) return; // Se o jogo acabou, não faz mais nada
+    // LÓGICA DE ESCOLHA INICIAL
+        if (!escolheuTerritorioInicial) {
+            if (t.owner == "Neutral") {
+                Color corJogador = (GameData.instance != null) ? GameData.instance.playerColor : Color.blue;
+                
+                t.ChangeOwner("Player", corJogador);
+                t.troops = 3;
+                t.AddTroops(0);
+                
+                // 🔥 ADICIONADO: Guarda o território inicial do jogador
+                territorioInicialPlayer = t;
+                
+                if (AudioManager.instance != null) {
+                    AudioManager.instance.PlayConfirm(); 
+                }
+                
+                escolheuTerritorioInicial = true;
+                
+                // IA escolhe o dela agora
+                EscolhaInicialIA();
+                
+                if (UIManager.instance != null) {
+                    UIManager.instance.UpdateStatus("Território escolhido! Defenda sua capital e ataque a do inimigo.");
+                }
+                
+                DistributeTurnTroops("Player");
+            }
+            return;
+        }
+
         if (currentTurn != "Player") {
             Debug.Log("Não é turno do jogador.");
             return;
@@ -324,124 +447,98 @@ public class GameManager : MonoBehaviour {
 
     public void Battle(Territory attacker, Territory defender)
     {
+        if (jogoAcabou) return;
+
         if (attacker == null || defender == null)
             return;
 
-        int attackerTroopsBeforeBattle = attacker.troops;
+        // 🎲 LÓGICA DE UM DADO COM BÓNUS
+        int bonusAtacante = Mathf.Clamp(attacker.troops - 1, 0, 5);
+        int bonusDefensor = Mathf.Clamp(defender.troops, 0, 5);
 
-        int attackerDiceCount = Mathf.Clamp(attacker.troops - 1, 1, 3);
-        int defenderDiceCount = Mathf.Clamp(defender.troops, 1, 2);
+        int dadoAtacante = Random.Range(1, 7);
+        int dadoDefensor = Random.Range(1, 7);
 
-        List<int> attackerResults = new List<int>();
-        List<int> defenderResults = new List<int>();
-
-        for (int i = 0; i < attackerDiceCount; i++)
-            attackerResults.Add(Random.Range(1, 7));
-
-        for (int i = 0; i < defenderDiceCount; i++)
-            defenderResults.Add(Random.Range(1, 7));
-
-        attackerResults.Sort((a, b) => b.CompareTo(a));
-        defenderResults.Sort((a, b) => b.CompareTo(a));
+        int resultadoFinalAtacante = dadoAtacante + bonusAtacante;
+        int resultadoFinalDefensor = dadoDefensor + bonusDefensor;
 
         if (UIManager.instance != null)
-            UIManager.instance.UpdateDiceDisplay(attackerResults, defenderResults);
-
-        int comparisons = Mathf.Min(attackerResults.Count, defenderResults.Count);
-
-        int attackerLosses = 0;
-        int defenderLosses = 0;
-
-        for (int i = 0; i < comparisons; i++)
         {
-            if (attackerResults[i] > defenderResults[i])
-                defenderLosses++;
-            else
-                attackerLosses++;
+            List<int> listaAtk = new List<int> { dadoAtacante };
+            List<int> listaDef = new List<int> { dadoDefensor };
+            UIManager.instance.UpdateDiceDisplay(listaAtk, listaDef);
+            
+            if (UIManager.instance.diceResultText != null)
+            {
+                UIManager.instance.diceResultText.text = 
+                    $"<b>Ataque:</b> Dado ({dadoAtacante}) + Tropas ({bonusAtacante}) = <b>{resultadoFinalAtacante}</b>\n" +
+                    $"<b>Defesa:</b> Dado ({dadoDefensor}) + Tropas ({bonusDefensor}) = <b>{resultadoFinalDefensor}</b>";
+            }
         }
 
-        attacker.RemoveTroops(attackerLosses);
-        defender.RemoveTroops(defenderLosses);
+        // Determina o vencedor da batalha
+        if (resultadoFinalAtacante > resultadoFinalDefensor)
+        {
+            // 🔥 CONQUISTA INSTANTÂNEA:
+            // Remove todas as tropas do defensor para forçar a conquista imediata
+            defender.RemoveTroops(defender.troops); 
+        }
+        else
+        {
+            // Se o atacante perder, ele ainda perde apenas 1 tropa (penalidade por falha)
+            attacker.RemoveTroops(1); 
+        }
 
         bool conquered = defender.troops <= 0;
-
         string battleMessage;
 
         if (conquered)
         {
             string newOwner = attacker.owner;
-
-            Color playerColor = (GameData.instance != null) ? GameData.instance.playerColor : Color.red;
-
-            Color newColor =
-                (newOwner == "Player")
-                ? playerColor // Usa a cor dinâmica ao invés de Color.red fixo!
-                : Color.blue;
+            Color chosenPlayerColor = (GameData.instance != null) ? GameData.instance.playerColor : Color.blue;
+            Color newColor = (newOwner == "Player") ? chosenPlayerColor : Color.red;
 
             defender.ChangeOwner(newOwner, newColor);
 
+            VerificarCondicaoDeVitoria();
+
+            if (jogoAcabou) return;
+
+            // Move as tropas para o novo território
             int troopsToOccupy = attacker.troops - 1;
-
             attacker.RemoveTroops(troopsToOccupy);
-
             defender.troops = troopsToOccupy;
             defender.AddTroops(0);
 
             if (newOwner == "Player")
-            {
-                battleMessage =
-                    $"Vitória! {defender.name} foi conquistado!\n" +
-                    $"Tropas enviadas: {troopsToOccupy}";
-            }
+                battleMessage = $"Vitória Relâmpago! {defender.name} foi dominado!";
             else
-            {
-                battleMessage =
-                    $"A IA conquistou {defender.name}!";
-            }
+                battleMessage = $"A IA dominou {defender.name} instantaneamente!";
         }
         else
         {
-            if (attacker.owner == "Player")
-            {
-                battleMessage =
-                    $"Ataque encerrado.\n" +
-                    $"Perdas do atacante: {attackerLosses}\n" +
-                    $"Perdas do defensor: {defenderLosses}";
-            }
-            else
-            {
-                battleMessage =
-                    $"{defender.name} resistiu ao ataque da IA.";
-            }
+            battleMessage = attacker.owner == "Player" ? "Ataque repelido! Perdeu 1 tropa." : "Defendeu com sucesso!";
         }
 
         if (UIManager.instance != null)
-        {
             UIManager.instance.UpdateBattleResult(battleMessage);
-        }
 
+        // Sons e logs mantidos...
         if (AudioManager.instance != null)
         {
             if (attacker.owner == "Player")
             {
-                if (conquered)
-                    AudioManager.instance.PlayVictory();
-                else
-                    AudioManager.instance.PlayDefeat();
+                if (conquered) AudioManager.instance.PlayVictory();
+                else AudioManager.instance.PlayDefeat();
             }
             else if (conquered && defender.owner == "AI")
             {
                 AudioManager.instance.PlayDefeat();
             }
         }
-
-        Debug.Log(
-            $"Batalha: {attacker.name} -> {defender.name} | " +
-            $"AtkLoss={attackerLosses} DefLoss={defenderLosses}"
-        );
     }
 }
-// Extensão estendida apenas para compatibilidade de nomenclatura interna do áudio
+
 public static class AudioFallbackExtension {
     public static void PlayKeepVictory(this AudioManager am) {
         am.PlayVictory();
