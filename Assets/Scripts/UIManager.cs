@@ -7,8 +7,10 @@ public class UIManager : MonoBehaviour {
     public TextMeshProUGUI turnText;
     public TextMeshProUGUI statusText;
     public TextMeshProUGUI playerColorText;
-    public TextMeshProUGUI battleResultText;
     public TextMeshProUGUI diceResultText;
+
+    private string statusMessage = "";
+    private string battleResultMessage = "";
 
     [Header("Painel de Fim de Jogo")]
     public GameObject painelGameOver;          // Arraste o 'PainelGameOver' aqui
@@ -28,9 +30,9 @@ public class UIManager : MonoBehaviour {
         {
             UpdateTurn(GameManager.instance.currentTurn);
             UpdatePlayerColor();
-            UpdateStatus("Clique no seu território para começar.");
+            UpdateStatus("Clique no seu território para começar.", "Bem-vindo ao jogo!");
             UpdateHoverInfo(null); // Inicializa o painel único vazio
-            UpdateBattleResult("Bem-vindo ao jogo!");
+            RefreshUnifiedStatus();
         }
     }
 
@@ -41,9 +43,35 @@ public class UIManager : MonoBehaviour {
     }
 
     public void UpdateStatus(string status) {
-        if (statusText != null) {
-            statusText.text = status;
+        statusMessage = status;
+        battleResultMessage = string.Empty;
+        RefreshUnifiedStatus();
+    }
+
+    public void UpdateStatus(string status, string battleResult) {
+        statusMessage = status;
+        battleResultMessage = battleResult;
+        RefreshUnifiedStatus();
+    }
+
+    public void UpdateBattleResult(string result) {
+        battleResultMessage = result;
+        RefreshUnifiedStatus();
+    }
+
+    private void RefreshUnifiedStatus() {
+        if (statusText == null) return;
+
+        string unified = statusMessage;
+
+        if (!string.IsNullOrEmpty(battleResultMessage)) {
+            if (!string.IsNullOrEmpty(unified)) {
+                unified += "\n";
+            }
+            unified += battleResultMessage;
         }
+
+        statusText.text = unified;
     }
 
     // === SOLUÇÃO DO ERRO CS1061 ===
@@ -110,12 +138,6 @@ public class UIManager : MonoBehaviour {
         if (playerColorText != null) {
             string corNome = (GameData.instance != null) ? GameData.instance.playerColorName : "Azul";
             playerColorText.text = "Sua cor: " + corNome;
-        }
-    }
-
-    public void UpdateBattleResult(string result) {
-        if (battleResultText != null) {
-            battleResultText.text = result;
         }
     }
 

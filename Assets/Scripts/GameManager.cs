@@ -32,8 +32,7 @@ public class GameManager : MonoBehaviour {
     private void SetupInitialOwners() {
         // Apenas garante que a interface saiba que o jogador precisa escolher
         if (UIManager.instance != null) {
-            UIManager.instance.UpdateStatus("Escolha seu território inicial clicando em um país!");
-            UIManager.instance.UpdateBattleResult("Fase de Seleção");
+            UIManager.instance.UpdateStatus("Escolha seu território inicial clicando em um país!", "Fase de Seleção");
         }
         // Não damos países a ninguém aqui agora!
     }
@@ -78,8 +77,7 @@ public class GameManager : MonoBehaviour {
                              "<color=red><b>A IA VENCEU A PARTIDA!</b></color>";
                 
                 UIManager.instance.MostrarTelaGameOver(msg);
-                UIManager.instance.UpdateStatus("FIM DE JOGO: A IA capturou sua Capital!"); //[cite: 14]
-                UIManager.instance.UpdateBattleResult("<color=red><b>DERROTA CRÍTICA!</b></color>"); //[cite: 14]
+                UIManager.instance.UpdateStatus("FIM DE JOGO: A IA capturou sua Capital!", "<color=red><b>DERROTA CRÍTICA!</b></color>"); //[cite: 14]
             }
             
             Debug.Log("Jogo Encerrado: Vitória da IA por captura de base."); //[cite: 14]
@@ -107,8 +105,7 @@ public class GameManager : MonoBehaviour {
                              "<color=green><b>PARABÉNS, VOCÊ DOMINOU O IMPÉRIO!</b></color>";
                 
                 UIManager.instance.MostrarTelaGameOver(msg);
-                UIManager.instance.UpdateStatus("PARABÉNS! Você conquistou a Capital inimiga!"); //[cite: 14]
-                UIManager.instance.UpdateBattleResult("<color=green><b>VITÓRIA SUPREMA!</b></color>"); //[cite: 14]
+                UIManager.instance.UpdateStatus("PARABÉNS! Você conquistou a Capital inimiga!", "<color=green><b>VITÓRIA SUPREMA!</b></color>"); //[cite: 14]
             }
             
             Debug.Log("Jogo Encerrado: Vitória do Player por captura de base."); //[cite: 14]
@@ -227,8 +224,7 @@ public class GameManager : MonoBehaviour {
             Debug.Log("Origem selecionada: " + t.name);
             if (UIManager.instance != null) {
                 UIManager.instance.UpdateSelectionInfo(selectedOrigin, null);
-                UIManager.instance.UpdateStatus("Origem confirmada. Escolha um vizinho para ATACAR (Inimigo) ou REFORÇAR (Seu).");
-                UIManager.instance.UpdateBattleResult("Aguardando destino...");
+                UIManager.instance.UpdateStatus("Origem confirmada. Escolha um vizinho para ATACAR (Inimigo) ou REFORÇAR (Seu).", "Aguardando destino...");
             }
         } else {
             // Validação de Vizinhos: O destino DEVE ser vizinho da origem
@@ -383,8 +379,7 @@ public class GameManager : MonoBehaviour {
 
             if (UIManager.instance != null)
             {
-                UIManager.instance.UpdateStatus("IA não possui tropas suficientes.");
-                UIManager.instance.UpdateBattleResult("IA passou o turno.");
+                UIManager.instance.UpdateStatus("IA não possui tropas suficientes.", "IA passou o turno.");
             }
 
             StartCoroutine(FinishAITurn());
@@ -426,9 +421,9 @@ public class GameManager : MonoBehaviour {
         if (origin == null || destination == null) {
             Debug.Log("IA escolheu passar o turno estrategicamente.");
             if (UIManager.instance != null) {
-                UIManager.instance.UpdateStatus("IA encerrou as ações voluntariamente.");
-                UIManager.instance.UpdateBattleResult("Nenhum ataque realizado.");
+                UIManager.instance.UpdateStatus("IA encerrou as ações voluntariamente.", "Nenhum ataque realizado.");
             }
+
             EndTurn();
             return;
         }
@@ -521,7 +516,7 @@ public class GameManager : MonoBehaviour {
         }
 
         if (UIManager.instance != null)
-            UIManager.instance.UpdateBattleResult(battleMessage);
+            UIManager.instance.UpdateStatus(battleMessage);
 
         // Sons e logs mantidos...
         if (AudioManager.instance != null)
