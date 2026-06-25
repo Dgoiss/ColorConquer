@@ -8,21 +8,21 @@ public class MainMenuManager : MonoBehaviour {
     public TextMeshProUGUI selectedColorText;
 
     [Header("Painéis")]
-    public GameObject painelCores; // Arraste o objeto PainelCores para aqui no Inspector
+    public GameObject painelCores; // Painel de seleção de cores
 
     void Start() {
         if (GameData.instance != null && selectedColorText != null) {
             selectedColorText.text = "Cor Selecionada: " + GameData.instance.playerColorName;
         }
         
-        // Garante que o painel comece fechado
+        // Fecha o painel no início
         if(painelCores != null) painelCores.SetActive(false);
     }
 
-    // Função para o botão principal "Selecionar sua Cor"
+    // Alterna abertura do painel
     public void AbrirFecharPainel() {
         if (painelCores != null) {
-            // Inverte o estado atual: se estiver aberto fecha, se estiver fechado abre
+            // Alterna o estado atual do painel
             bool estadoAtual = painelCores.activeSelf;
             painelCores.SetActive(!estadoAtual);
         }
@@ -37,7 +37,7 @@ public class MainMenuManager : MonoBehaviour {
                 GameData.instance.playerColorName = "Azul";
                 break;
             case "verde":
-                GameData.instance.playerColor = new Color(0f, 0.6f, 0f); // Verde escuro para leitura
+                GameData.instance.playerColor = new Color(0f, 0.6f, 0f); // Cor verde do jogador
                 GameData.instance.playerColorName = "Verde";
                 break;
             case "amarelo":
@@ -54,7 +54,7 @@ public class MainMenuManager : MonoBehaviour {
             selectedColorText.text = "Cor Selecionada: " + GameData.instance.playerColorName;
         }
 
-        // Esconde o painel após a seleção
+        // Fecha o painel depois de escolher
         if (painelCores != null) {
             painelCores.SetActive(false);
         }

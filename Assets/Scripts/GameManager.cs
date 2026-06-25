@@ -1,4 +1,4 @@
-//Controla a máquina de estados do jogo (Turno do Jogador, Turno da IA, Verificação de Vitória).
+// Controla o fluxo de jogo e as ações de território.
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour {
     private bool escolheuTerritorioInicial = false;
 
     [Header("Configurações de Tabuleiro")]
-    [Tooltip("Quantidade máxima de tropas permitida em um único território para evitar objetos imortais.")]
+    [Tooltip("Quantidade máxima de tropas em um território.")]
     public int maxTroopsPerTerritory = 15;
 
     void Awake() {
@@ -30,11 +30,10 @@ public class GameManager : MonoBehaviour {
     }
 
     private void SetupInitialOwners() {
-        // Apenas garante que a interface saiba que o jogador precisa escolher
+        // Pede que o jogador escolha um território inicial
         if (UIManager.instance != null) {
             UIManager.instance.UpdateStatus("Escolha seu território inicial clicando em um país!", "Fase de Seleção");
         }
-        // Não damos países a ninguém aqui agora!
     }
 
     private Territory selectedOrigin;
@@ -56,47 +55,38 @@ public class GameManager : MonoBehaviour {
     public AudioSource musicaFimDeJogo;  // Arraste um novo AudioSource com a música de Game Over aqui
 
     private void VerificarCondicaoDeVitoria() {
-        // 1. Se a IA conseguiu dominar o território inicial do Player
-        if (territorioInicialPlayer != null && territorioInicialPlayer.owner == "AI") { //[cite: 14]
-            jogoAcabou = true; //[cite: 14]
-            
-            // 🛑 PARAR TODOS OS SONS E MÚSICAS DO JOGO
+        // Verifica se um território inicial foi capturado
+        if (territorioInicialPlayer != null && territorioInicialPlayer.owner == "AI") {
+            jogoAcabou = true;
             PararTodosOsSons();
 
-            // 🎵 TOCAR MÚSICA DO FIM DO JOGO
             if (musicaFimDeJogo != null) {
                 musicaFimDeJogo.Play();
             } else if (AudioManager.instance != null) {
-                AudioManager.instance.PlayDefeat(); // Fallback de som caso não uses o AudioSource direto //[cite: 14]
+                AudioManager.instance.PlayDefeat();
             }
 
-            // 📺 EXIBIR TEXTO NO MEIO DA TELA
             if (UIManager.instance != null) {
                 string msg = "<color=red>GAME OVER</color>\n\n" +
                              "A <color=red>IA (Inimigo)</color> dominou a Capital do <color=blue>Jogador</color>!\n\n" +
                              "<color=red><b>A IA VENCEU A PARTIDA!</b></color>";
                 
                 UIManager.instance.MostrarTelaGameOver(msg);
-                UIManager.instance.UpdateStatus("FIM DE JOGO: A IA capturou sua Capital!", "<color=red><b>DERROTA CRÍTICA!</b></color>"); //[cite: 14]
+                UIManager.instance.UpdateStatus("FIM DE JOGO: A IA capturou sua Capital!", "<color=red><b>DERROTA CRÍTICA!</b></color>");
             }
             
-            Debug.Log("Jogo Encerrado: Vitória da IA por captura de base."); //[cite: 14]
+            Debug.Log("Jogo Encerrado: Vitória da IA por captura de base.");
         }
-        // 2. Se o Player conseguiu dominar o território inicial da IA
-        else if (territorioInicialAI != null && territorioInicialAI.owner == "Player") { //[cite: 14]
-            jogoAcabou = true; //[cite: 14]
-            
-            // 🛑 PARAR TODOS OS SONS E MÚSICAS DO JOGO
+else if (territorioInicialAI != null && territorioInicialAI.owner == "Player") {
+            jogoAcabou = true;
             PararTodosOsSons();
 
-            // 🎵 TOCAR MÚSICA DO FIM DO JOGO
-            if (musicaFimDeJogo != null) {
+                if (musicaFimDeJogo != null) {
                 musicaFimDeJogo.Play();
             } else if (AudioManager.instance != null) {
-                AudioManager.instance.PlayVictory(); // Fallback de som caso não uses o AudioSource direto //[cite: 14]
+                AudioManager.instance.PlayVictory();
             }
 
-            // 📺 EXIBIR TEXTO NO MEIO DA TELA
             if (UIManager.instance != null) {
                 string corJogadorHex = (GameData.instance != null) ? GameData.instance.playerColorName : "Jogador";
                 
@@ -105,24 +95,21 @@ public class GameManager : MonoBehaviour {
                              "<color=green><b>PARABÉNS, VOCÊ DOMINOU O IMPÉRIO!</b></color>";
                 
                 UIManager.instance.MostrarTelaGameOver(msg);
-                UIManager.instance.UpdateStatus("PARABÉNS! Você conquistou a Capital inimiga!", "<color=green><b>VITÓRIA SUPREMA!</b></color>"); //[cite: 14]
+                UIManager.instance.UpdateStatus("PARABÉNS! Você conquistou a Capital inimiga!", "<color=green><b>VITÓRIA SUPREMA!</b></color>");
             }
             
-            Debug.Log("Jogo Encerrado: Vitória do Player por captura de base."); //[cite: 14]
+            Debug.Log("Jogo Encerrado: Vitória do Player por captura de base.");
         }
     }
 
-    // Método auxiliar focado em silenciar o ambiente antes da música da vitória/derrota
+    // Para todos os sons antes da música de vitória/derrota
     private void PararTodosOsSons() {
-        // 1. Para a música de fundo principal que associaste no Inspector
         if (musicaFundoAtual != null) {
             musicaFundoAtual.Stop();
         }
 
-        // 2. Procura e desliga QUALQUER AudioSource que esteja ativo na cena para garantir silêncio absoluto (efeitos de dados, cliques, etc)
         AudioSource[] todosOsSons = FindObjectsOfType<AudioSource>();
         foreach (AudioSource som in todosOsSons) {
-            // Só não para a música do fim de jogo que vai começar agora!
             if (som != musicaFimDeJogo) {
                 som.Stop();
             }
@@ -145,7 +132,7 @@ public class GameManager : MonoBehaviour {
             escolhaIA.troops = 3;
             escolhaIA.AddTroops(0);
             
-            // 🔥 ADICIONADO: Guarda o território inicial da IA
+            // Guarda o território inicial da IA
             territorioInicialAI = escolhaIA;
             
             Debug.Log("A IA escolheu a capital em: " + escolhaIA.name);
@@ -157,8 +144,8 @@ public class GameManager : MonoBehaviour {
     }
 
     public void SelectTerritory(Territory t) {
-        if (jogoAcabou) return; // Se o jogo acabou, não faz mais nada
-    // LÓGICA DE ESCOLHA INICIAL
+        if (jogoAcabou) return; // Não faz nada se o jogo acabou
+        // Escolha inicial de território
         if (!escolheuTerritorioInicial) {
             if (t.owner == "Neutral") {
                 Color corJogador = (GameData.instance != null) ? GameData.instance.playerColor : Color.blue;
@@ -167,7 +154,7 @@ public class GameManager : MonoBehaviour {
                 t.troops = 3;
                 t.AddTroops(0);
                 
-                // 🔥 ADICIONADO: Guarda o território inicial do jogador
+                // Guarda o território inicial do jogador
                 territorioInicialPlayer = t;
                 
                 if (AudioManager.instance != null) {
@@ -176,7 +163,7 @@ public class GameManager : MonoBehaviour {
                 
                 escolheuTerritorioInicial = true;
                 
-                // IA escolhe o dela agora
+                // IA escolhe seu território inicial
                 EscolhaInicialIA();
                 
                 if (UIManager.instance != null) {
@@ -194,7 +181,7 @@ public class GameManager : MonoBehaviour {
         }
 
         if (UIManager.instance != null) {
-            UIManager.instance.UpdateDiceDisplay(null, null); // Limpa os dados anteriores
+            UIManager.instance.UpdateDiceDisplay(null, null); // Limpa dados de dados anteriores
         }
 
         if (selectedOrigin == null) {
@@ -227,7 +214,7 @@ public class GameManager : MonoBehaviour {
                 UIManager.instance.UpdateStatus("Origem confirmada. Escolha um vizinho para ATACAR (Inimigo) ou REFORÇAR (Seu).", "Aguardando destino...");
             }
         } else {
-            // Validação de Vizinhos: O destino DEVE ser vizinho da origem
+            // Verifica se o destino é vizinho da origem
             bool isNeighbor = false;
             if (selectedOrigin.neighbors != null) {
                 foreach (Territory neighbor in selectedOrigin.neighbors) {
@@ -251,7 +238,7 @@ public class GameManager : MonoBehaviour {
                 return;
             }
 
-            // TÁTICO / TABULEIRO: Diferenciação de Ação (Mover vs Atacar)
+            // Escolhe ação: mover ou atacar
             if (t.owner == "Player") {
                 // Ação: Mover/Manejar tropas entre territórios do próprio jogador
                 MoveTroops(selectedOrigin, t);
@@ -277,11 +264,11 @@ public class GameManager : MonoBehaviour {
         return selectedOrigin;
     }
 
-    // MECÂNICA TÁTICA: Mover metade das tropas para reforço de fronteira
+    // Move tropas entre territórios aliados
     private void MoveTroops(Territory origin, Territory destination) {
         if (origin.troops <= 1) return;
 
-        // Calcula metade das tropas disponíveis para o remanejamento
+        // Calcula tropas que podem ser movidas
         int troopsToMove = (origin.troops - 1) / 2;
 
         if (troopsToMove <= 0) {
@@ -290,7 +277,7 @@ public class GameManager : MonoBehaviour {
             return;
         }
 
-        // ANTI-IMORTALIDADE: Valida se o destino vai estourar o limite máximo permitido
+        // Ajusta para não exceder o limite de tropas
         if (destination.troops + troopsToMove > maxTroopsPerTerritory) {
             troopsToMove = maxTroopsPerTerritory - destination.troops;
             if (troopsToMove <= 0) {
@@ -315,14 +302,14 @@ public class GameManager : MonoBehaviour {
         EndTurn();
     }
 
-    // CAPTURA / TABULEIRO: Sistema de ganho passivo a cada início de turno
+    // Adiciona tropas de turno a cada território da facção
     private void DistributeTurnTroops(string faction) {
         Territory[] allTerritories = FindObjectsOfType<Territory>();
         int countGenerated = 0;
 
         foreach (Territory t in allTerritories) {
             if (t.owner == faction) {
-                // ANTI-IMORTALIDADE: Só ganha tropa se estiver abaixo do teto máximo definido
+                // Só adiciona tropa se não ultrapassar o limite
                 if (t.troops < maxTroopsPerTerritory) {
                     t.AddTroops(1);
                     countGenerated++;
@@ -367,7 +354,7 @@ public class GameManager : MonoBehaviour {
         Territory[] allTerritories = FindObjectsOfType<Territory>();
         Territory[] aiTerritories = System.Array.FindAll(allTerritories, t => t.owner == "AI");
 
-        // Filtra apenas territórios da IA que tenham capacidade de atacar/mover (tropas > 1)
+        // Filtra territórios da IA com tropas suficientes
         List<Territory> validOrigins = new List<Territory>();
         foreach(Territory t in aiTerritories) {
             if (t.troops > 1) validOrigins.Add(t);
@@ -447,7 +434,7 @@ public class GameManager : MonoBehaviour {
         if (attacker == null || defender == null)
             return;
 
-        // 🎲 LÓGICA DE UM DADO COM BÓNUS
+        // Calcula o bônus de ataque e defesa
         int bonusAtacante = Mathf.Clamp(attacker.troops - 1, 0, 5);
         int bonusDefensor = Mathf.Clamp(defender.troops, 0, 5);
 
@@ -471,11 +458,10 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        // Determina o vencedor da batalha
+        // Decide o resultado da batalha
         if (resultadoFinalAtacante > resultadoFinalDefensor)
         {
-            // 🔥 CONQUISTA INSTANTÂNEA:
-            // Remove todas as tropas do defensor para forçar a conquista imediata
+            // Remove tropas do defensor em caso de vitória
             defender.RemoveTroops(defender.troops); 
         }
         else
@@ -499,7 +485,7 @@ public class GameManager : MonoBehaviour {
 
             if (jogoAcabou) return;
 
-            // Move as tropas para o novo território
+            // Move tropas para o território conquistado
             int troopsToOccupy = attacker.troops - 1;
             attacker.RemoveTroops(troopsToOccupy);
             defender.troops = troopsToOccupy;
@@ -518,7 +504,7 @@ public class GameManager : MonoBehaviour {
         if (UIManager.instance != null)
             UIManager.instance.UpdateStatus(battleMessage);
 
-        // Sons e logs mantidos...
+        // Reproduz sons conforme o resultado
         if (AudioManager.instance != null)
         {
             if (attacker.owner == "Player")

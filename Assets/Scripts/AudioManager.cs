@@ -9,19 +9,16 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource musicSource;
 
     [Header("Música de Fundo")]
-    // 1. Coloque o seu arquivo de música nesta variável pelo Inspector do Unity
     public AudioClip backgroundMusic; 
 
     [Header("Categorias de Som")]
-    // Categorias solicitadas pelo designer
-    public AudioClip Som_Confirmacao; // cliques válidos / seleção
-    public AudioClip Som_Erro; // cliques inválidos / comandos bloqueados
-    public AudioClip Som_Combate_Vitoria; // jogador vence ataque
-    public AudioClip Som_Combate_Derrota; // jogador perde ataque
-    public AudioClip Som_Notificacao; // turno volta para o jogador
+    public AudioClip Som_Confirmacao; // som de confirmação
+    public AudioClip Som_Erro; // som de erro
+    public AudioClip Som_Combate_Vitoria; // som de vitória
+    public AudioClip Som_Combate_Derrota; // som de derrota
+    public AudioClip Som_Notificacao; // som de notificação de turno
 
     [Header("Clipes Legados (compatibilidade)")]
-    // Mantém os campos antigos caso já estejam atribuídos no Inspector
     public AudioClip clickTerritorySound;
     public AudioClip clickInvalidSound;
     public AudioClip battleVictorySound;
@@ -41,10 +38,8 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // 2. O método Start roda assim que o jogo começa
     void Start()
     {
-        // Se você atribuiu uma música no Inspector, ela começará a tocar aqui
         if (backgroundMusic != null)
         {
             PlayMusic(backgroundMusic);
@@ -59,7 +54,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // Métodos de conveniência para cada categoria (verificam fontes e fallback para clipes antigos)
     public void PlayConfirm()
     {
         if (sfxSource == null) return;
@@ -95,7 +89,6 @@ public class AudioManager : MonoBehaviour
         if (clip != null) sfxSource.PlayOneShot(clip);
     }
 
-    // 3. Esta função configura o AudioSource da música para Loop e toca o som
     public void PlayMusic(AudioClip musicClip)
     {
         if (musicSource != null && musicClip != null)

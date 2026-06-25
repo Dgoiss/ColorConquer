@@ -1,4 +1,4 @@
-//Atualiza textos de conquistas e menus.
+// Atualiza textos da UI.
 using TMPro;
 using UnityEngine;
 
@@ -13,11 +13,11 @@ public class UIManager : MonoBehaviour {
     private string battleResultMessage = "";
 
     [Header("Painel de Fim de Jogo")]
-    public GameObject painelGameOver;          // Arraste o 'PainelGameOver' aqui
+    public GameObject painelGameOver;          // Painel de game over
     public TextMeshProUGUI textoGameOver;
 
     [Header("Painel Unificado de Inspeção")]
-    // Este é o único TextMeshPro que você usará para inspecionar passando o mouse
+    // Texto de inspeção por mouse
     public TextMeshProUGUI hoverInfoText; 
 
     void Awake() {
@@ -31,7 +31,7 @@ public class UIManager : MonoBehaviour {
             UpdateTurn(GameManager.instance.currentTurn);
             UpdatePlayerColor();
             UpdateStatus("Clique no seu território para começar.", "Bem-vindo ao jogo!");
-            UpdateHoverInfo(null); // Inicializa o painel único vazio
+            UpdateHoverInfo(null); // Inicia painel vazio
             RefreshUnifiedStatus();
         }
     }
@@ -74,10 +74,9 @@ public class UIManager : MonoBehaviour {
         statusText.text = unified;
     }
 
-    // === SOLUÇÃO DO ERRO CS1061 ===
-    // O GameManager precisa que esse método exista. Vamos mantê-lo aqui para compatibilidade do sistema de cliques!
+    // Compatibilidade com GameManager
     public void UpdateSelectionInfo(Territory origin, Territory target) {
-        // Se o GameManager mandar limpar as seleções (null, null), nós limpamos também o nosso painel de mouse por segurança
+        // Limpa o painel se a seleção for removida
         if (origin == null && target == null) {
             UpdateHoverInfo(null);
         }
@@ -93,7 +92,7 @@ public class UIManager : MonoBehaviour {
         }
     }
 
-    // Método para atualizar o seu texto único de inspeção por mouse (Tactical / Colour)
+    // Atualiza o texto do painel de inspeção
     public void UpdateHoverInfo(Territory t) {
         if (hoverInfoText == null) return;
 
@@ -102,13 +101,13 @@ public class UIManager : MonoBehaviour {
             return;
         }
 
-        // Define uma cor em formato rich-text dependendo de quem é o dono
+        // Prepara texto colorido para o dono
         string donoColorido = t.owner;
         if (t.owner == "Player") {
-            // Pega o nome da cor em português escolhida no menu
+            // Usa a cor escolhida pelo jogador
             string corNomePt = (GameData.instance != null) ? GameData.instance.playerColorName : "Azul";
             
-            // Converte o nome em português para a tag correspondente em inglês que o TextMeshPro entende
+            // Seleciona a tag de cor para o texto
             string corHtml = "red"; // Fallback padrão
             switch (corNomePt.ToLower()) {
                 case "verde": corHtml = "green"; break;
@@ -118,7 +117,7 @@ public class UIManager : MonoBehaviour {
                 case "azul": corHtml = "blue"; break;
             }
 
-            // Aplica a cor dinâmica no Rich Text
+            // Define o texto colorido do dono
             donoColorido = $"<color={corHtml}>Seu Exército ({corNomePt})</color>";
         } 
         else if (t.owner == "AI") {

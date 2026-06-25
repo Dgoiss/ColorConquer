@@ -1,4 +1,4 @@
-//Script anexado a cada região do mapa. Armazena: ID, Dono Atual (Player/IA), Quantidade de Tropas e Cor.
+// Script de região do mapa.
 using TMPro;
 using UnityEngine;
 
@@ -10,8 +10,8 @@ public class Territory : MonoBehaviour {
     private SpriteRenderer sr;
     public TextMeshPro troopsText;
 
-    // 🔥 CORREÇÃO: Inversão das cores estáticas base
-    private static readonly Color playerColor = Color.blue; // Azul agora é a cor base do player (caso GameData falhe)
+    // Cores base caso não haja GameData
+    private static readonly Color playerColor = Color.blue;
     private static readonly Color aiColor = Color.red;
     private static readonly Color neutralColor = Color.gray;
 
@@ -24,7 +24,7 @@ public class Territory : MonoBehaviour {
     void OnMouseDown() {
         if (GameManager.instance != null) {
             Debug.Log("Clicou em: " + gameObject.name);
-            // Som de confirmação apenas quando for o turno do jogador e o território for do jogador
+            // Som de confirmação no turno do jogador
             if (GameManager.instance.currentTurn == "Player" && owner == "Player") {
                 if (AudioManager.instance != null) {
                     AudioManager.instance.PlayConfirm();
@@ -38,14 +38,14 @@ public class Territory : MonoBehaviour {
     }
 
     void OnMouseEnter() {
-        // Não importa quem é o dono, ao passar o mouse, exibe as informações no painel único
+        // Exibe informações ao passar o mouse
         if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
             UIManager.instance.UpdateHoverInfo(this);
         }
     }
 
     void OnMouseExit() {
-        // Ao retirar o mouse, limpa o painel único voltando para o estado padrão
+        // Limpa o painel ao sair com o mouse
         if (GameManager.instance != null && GameManager.instance.currentTurn == "Player" && UIManager.instance != null) {
             UIManager.instance.UpdateHoverInfo(null);
         }

@@ -1,4 +1,4 @@
-//Define os atributos de ataque e defesa.
+// Atributos de unidade.
 using UnityEngine;
 
 public class Unit : MonoBehaviour
